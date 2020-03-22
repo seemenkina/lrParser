@@ -1,22 +1,23 @@
-package parser
+package grammar
 
 import (
 	"fmt"
 	"os"
 	"text/tabwriter"
+
+	"github.com/seemenkina/lrParser/parser"
 )
 
 type Rule struct {
-	lSymbol string
-	rSymbol string
+	LSymbol string
+	RSymbol string
 }
 
 // Non Terminal symbol
 type NToken struct {
-	n                string // symbol
-	alternative      []int  // alternative in rules
-	countAlternative int    // number of alternative in rules
-	// firstN           int    // first alternative in rules
+	N                string // symbol
+	Alternative      []int  // alternative in rules
+	CountAlternative int    // number of alternative in rules
 }
 
 // Terminal symbol
@@ -25,18 +26,18 @@ type TToken struct {
 }
 
 type Grammar struct {
-	nTokens     []NToken
+	NTokens     []NToken
 	tTokens     []TToken
-	rules       []Rule
-	startSymbol string
+	Rules       []Rule
+	StartSymbol string
 }
 
 func (gr *Grammar) AddRule(ls, rs string) {
 	rule := Rule{
-		lSymbol: ls,
-		rSymbol: rs,
+		LSymbol: ls,
+		RSymbol: rs,
 	}
-	gr.rules = append(gr.rules, rule)
+	gr.Rules = append(gr.Rules, rule)
 }
 
 func (gr *Grammar) AddTToken(ts string) {
@@ -49,8 +50,8 @@ func (gr *Grammar) AddTToken(ts string) {
 func (gr *Grammar) AddNToken(ns string) error {
 	var alt []int
 
-	for i, r := range gr.rules {
-		if r.lSymbol == ns {
+	for i, r := range gr.Rules {
+		if r.LSymbol == ns {
 			alt = append(alt, i)
 		}
 	}
@@ -59,29 +60,29 @@ func (gr *Grammar) AddNToken(ns string) error {
 	}
 
 	nt := NToken{
-		n:                ns,
-		alternative:      alt,
-		countAlternative: len(alt),
+		N:                ns,
+		Alternative:      alt,
+		CountAlternative: len(alt),
 	}
 
-	gr.nTokens = append(gr.nTokens, nt)
+	gr.NTokens = append(gr.NTokens, nt)
 	return nil
 }
 
 func (gr *Grammar) AddStartSymbol(s string) {
-	gr.startSymbol = s
+	gr.StartSymbol = s
 }
 
 func (gr *Grammar) PrintGrammar() {
 	fmt.Println("Rules:")
-	for i, r := range gr.rules {
-		fmt.Printf("%d: %s -> %s\n", i, r.lSymbol, r.rSymbol)
+	for i, r := range gr.Rules {
+		fmt.Printf("%d: %s -> %s\n", i, r.LSymbol, r.RSymbol)
 	}
 	fmt.Printf("Terminal Symbol: ")
 	for _, t := range gr.tTokens {
 		fmt.Printf("%s ", t.t)
 	}
-	fmt.Printf("\nStart Symbol: %s\n", gr.startSymbol)
+	fmt.Printf("\nStart Symbol: %s\n", gr.StartSymbol)
 	fmt.Print("Non Terminal:")
 	w := new(tabwriter.Writer)
 	w.Init(os.Stdout, 8, 8, 0, '\t', 0)
@@ -96,16 +97,16 @@ func (gr *Grammar) PrintGrammar() {
 	_, _ = fmt.Fprintf(w, "\n%s\t%s\t%s\t", "Symbol", "Count Alt", "Alternative")
 	_, _ = fmt.Fprintf(w, "\n%s\t%s\t%s\t", "------", "---------", "-----------")
 
-	for _, n := range gr.nTokens {
-		s := fmt.Sprintf("%d ", n.alternative)
-		_, _ = fmt.Fprintf(w, "\n%s\t%d\t%s\t", n.n, n.countAlternative, s)
+	for _, n := range gr.NTokens {
+		s := fmt.Sprintf("%d ", n.Alternative)
+		_, _ = fmt.Fprintf(w, "\n%s\t%d\t%s\t", n.N, n.CountAlternative, s)
 	}
 
 }
 
-func (gr *Grammar) findNToken(s string) int {
-	for i, nt := range gr.nTokens {
-		if nt.n == s {
+func (gr *Grammar) FindNToken(s string) int {
+	for i, nt := range gr.NTokens {
+		if nt.N == s {
 			return i
 		}
 	}
@@ -122,8 +123,8 @@ func (gr *Grammar) findTToken(s string) int {
 }
 
 func (gr *Grammar) IsNTerm(s string) int {
-	if gr.findNToken(s) == -1 {
-		return Term
+	if gr.FindNToken(s) == -1 {
+		return parser.Term
 	}
-	return NTerm
+	return parser.NTerm
 }

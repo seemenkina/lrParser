@@ -2,6 +2,8 @@ package parser
 
 import (
 	"fmt"
+
+	"github.com/seemenkina/lrParser/grammar"
 )
 
 type L1Token struct {
@@ -31,7 +33,7 @@ const (
 )
 
 type LRParser struct {
-	grammar Grammar
+	grammar grammar.Grammar
 	input   string
 	l1Stack []L1Token
 	l2Stack []L2Token
@@ -40,14 +42,14 @@ type LRParser struct {
 	inIter  int
 }
 
-func (lrp *LRParser) NewLRParser(gr Grammar, in string) {
+func (lrp *LRParser) NewLRParser(gr grammar.Grammar, in string) {
 	lrp.grammar = gr
 	lrp.input = in
 	lrp.state = normal
-	for _, nt := range lrp.grammar.nTokens {
-		if nt.n == lrp.grammar.startSymbol {
+	for _, nt := range lrp.grammar.NTokens {
+		if nt.N == lrp.grammar.StartSymbol {
 			lrp.l2Stack = append(lrp.l2Stack, L2Token{
-				token:     nt.n,
+				token:     nt.N,
 				tokenType: NTerm,
 			})
 		}
@@ -77,18 +79,18 @@ func (lrp *LRParser) PushL2Stack(l2t L2Token) {
 // A1 - first alternative for A
 func (lrp *LRParser) growthOfTree() {
 	sym := lrp.l2Stack[0].token
-	nTerm := lrp.grammar.nTokens[lrp.grammar.findNToken(sym)]
+	nTerm := lrp.grammar.NTokens[lrp.grammar.FindNToken(sym)]
 	l1t := L1Token{
-		token:            nTerm.n,
+		token:            nTerm.N,
 		tokenType:        NTerm,
-		countAlternative: nTerm.countAlternative,
+		countAlternative: nTerm.CountAlternative,
 		numOfAlternative: 1,
 	}
 
 	lrp.PushL1Stack(l1t)
 
-	numRule := nTerm.alternative[l1t.numOfAlternative-1]
-	rRule := lrp.grammar.rules[numRule].rSymbol
+	numRule := nTerm.Alternative[l1t.numOfAlternative-1]
+	rRule := lrp.grammar.Rules[numRule].RSymbol
 	l2t := L2Token{
 		token:     rRule,
 		tokenType: lrp.grammar.IsNTerm(rRule),
@@ -122,8 +124,8 @@ func (lrp *LRParser) successfulCompletion() {
 		if l1t.tokenType == Term {
 			continue
 		}
-		it := lrp.grammar.findNToken(l1t.token)
-		r := lrp.grammar.nTokens[it].alternative[l1t.numOfAlternative-1]
+		it := lrp.grammar.FindNToken(l1t.token)
+		r := lrp.grammar.NTokens[it].Alternative[l1t.numOfAlternative-1]
 		lrp.output = append(lrp.output, r)
 	}
 
@@ -149,35 +151,28 @@ func (lrp *LRParser) testAlternative() {
 
 	lrp.l1Stack[0].numOfAlternative++
 
-	it := lrp.grammar.findNToken(lrp.l1Stack[0].token)
-	r := lrp.grammar.nTokens[it].alternative[lrp.l1Stack[0].numOfAlternative-1]
+	it := lrp.grammar.FindNToken(lrp.l1Stack[0].token)
+	r := lrp.grammar.NTokens[it].Alternative[lrp.l1Stack[0].numOfAlternative-1]
 
-	rRule := lrp.grammar.rules[r].rSymbol
-	orRule := lrp.grammar.rules[r-1].rSymbol
+	rRule := lrp.grammar.Rules[r].RSymbol
+	orRule := lrp.grammar.Rules[r-1].RSymbol
 	lrp.l2Stack = lrp.l2Stack[len(orRule):]
 	lrp.PushL2Stack(L2Token{
 		token:     rRule,
 		tokenType: -1,
 	})
-
-	// lrp.l2Stack[0].token = rRule
-	// lrp.l2Stack[0].tokenType = lrp.grammar.IsNTerm(rRule)
-
 }
 
 func (lrp *LRParser) returnNonTerm() {
-	it := lrp.grammar.findNToken(lrp.l1Stack[0].token)
-	nr := lrp.grammar.nTokens[it].alternative[lrp.l1Stack[0].numOfAlternative-1]
-	rRule := lrp.grammar.rules[nr].rSymbol
-	lRule := lrp.grammar.rules[nr].lSymbol
+	it := lrp.grammar.FindNToken(lrp.l1Stack[0].token)
+	nr := lrp.grammar.NTokens[it].Alternative[lrp.l1Stack[0].numOfAlternative-1]
+	rRule := lrp.grammar.Rules[nr].RSymbol
+	lRule := lrp.grammar.Rules[nr].LSymbol
 	lrp.l2Stack = lrp.l2Stack[len(rRule):]
 	lrp.PushL2Stack(L2Token{
 		token:     lRule,
 		tokenType: -1,
 	})
-
-	// lrp.l2Stack[0].token = lRule
-	// lrp.l2Stack[0].tokenType = lrp.grammar.IsNTerm(lRule)
 
 	lrp.l1Stack = lrp.l1Stack[1:]
 }
@@ -188,6 +183,9 @@ func (lrp *LRParser) printOutput() {
 }
 
 func (lrp *LRParser) StartParse() error {
+	if len(lrp.input) == 0 {
+		return fmt.Errorf("Input srtring is empty\n")
+	}
 	for {
 		switch lrp.state {
 		case normal:
@@ -235,7 +233,7 @@ func (lrp *LRParser) StartParse() error {
 				continue
 			case lrp.l1Stack[0].tokenType == NTerm &&
 				lrp.l1Stack[0].numOfAlternative >= lrp.l1Stack[0].countAlternative:
-				if lrp.l1Stack[0].token == lrp.grammar.startSymbol && lrp.inIter == 0 {
+				if lrp.l1Stack[0].token == lrp.grammar.StartSymbol && lrp.inIter == 0 {
 					return fmt.Errorf("The input string does not belong to the grammar ")
 				} else {
 					lrp.returnNonTerm()
