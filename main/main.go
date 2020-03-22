@@ -55,7 +55,7 @@ func main() {
 	gr.PrintGrammar()
 
 	lrParser := parser.LRParser{}
-	lrParser.NewLRParser(gr, "!a+a!")
+	lrParser.NewLRParser(gr, "!a+b!")
 
 	err := lrParser.StartParse()
 	if err != nil {
