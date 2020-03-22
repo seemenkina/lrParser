@@ -1,4 +1,4 @@
-package lrparser
+package parser
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ type Grammar struct {
 	startSymbol string
 }
 
-func (gr *Grammar) addRule(ls, rs string) {
+func (gr *Grammar) AddRule(ls, rs string) {
 	rule := Rule{
 		lSymbol: ls,
 		rSymbol: rs,
@@ -39,14 +39,14 @@ func (gr *Grammar) addRule(ls, rs string) {
 	gr.rules = append(gr.rules, rule)
 }
 
-func (gr *Grammar) addTToken(ts string) {
+func (gr *Grammar) AddTToken(ts string) {
 	tt := TToken{
 		t: ts,
 	}
 	gr.tTokens = append(gr.tTokens, tt)
 }
 
-func (gr *Grammar) addNToken(ns string) error {
+func (gr *Grammar) AddNToken(ns string) error {
 	var alt []int
 
 	for i, r := range gr.rules {
@@ -69,11 +69,11 @@ func (gr *Grammar) addNToken(ns string) error {
 	return nil
 }
 
-func (gr *Grammar) addStartSymbol(s string) {
+func (gr *Grammar) AddStartSymbol(s string) {
 	gr.startSymbol = s
 }
 
-func (gr *Grammar) printGrammar() {
+func (gr *Grammar) PrintGrammar() {
 	fmt.Println("Rules:")
 	for i, r := range gr.rules {
 		fmt.Printf("%d: %s -> %s\n", i, r.lSymbol, r.rSymbol)
@@ -86,7 +86,13 @@ func (gr *Grammar) printGrammar() {
 	fmt.Print("Non Terminal:")
 	w := new(tabwriter.Writer)
 	w.Init(os.Stdout, 8, 8, 0, '\t', 0)
-	defer w.Flush()
+	defer func() {
+		_, _ = fmt.Fprintf(w, "\n")
+		err := w.Flush()
+		if err != nil {
+			fmt.Printf("%s\n", err)
+		}
+	}()
 
 	_, _ = fmt.Fprintf(w, "\n%s\t%s\t%s\t%s\t", "Symbol", "Count Alt", "First ALter", "Alternative")
 	_, _ = fmt.Fprintf(w, "\n%s\t%s\t%s\t%s\t", "------", "---------", "-----------", "-----------")
@@ -96,4 +102,29 @@ func (gr *Grammar) printGrammar() {
 		_, _ = fmt.Fprintf(w, "\n%s\t%d\t%d\t%s\t", n.n, n.countAlternative, n.firstN, s)
 	}
 
+}
+
+func (gr *Grammar) findNToken(s string) int {
+	for i, nt := range gr.nTokens {
+		if nt.n == s {
+			return i
+		}
+	}
+	return -1
+}
+
+func (gr *Grammar) findTToken(s string) int {
+	for i, tt := range gr.tTokens {
+		if tt.t == s {
+			return i
+		}
+	}
+	return -1
+}
+
+func (gr *Grammar) IsNTerm(s string) int {
+	if gr.findNToken(s) == -1 {
+		return Term
+	}
+	return NTerm
 }
