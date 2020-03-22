@@ -194,8 +194,7 @@ func (lrp *LRParser) StartParse() error {
 				lrp.growthOfTree()
 				continue
 
-			case lrp.l2Stack[0].tokenType == Term &&
-				lrp.l2Stack[0].token != string(lrp.input[lrp.inIter]):
+			case lrp.l2Stack[0].tokenType == Term && lrp.l2Stack[0].token != string(lrp.input[lrp.inIter]):
 				lrp.state = ret
 				continue
 
@@ -227,12 +226,10 @@ func (lrp *LRParser) StartParse() error {
 			case lrp.l1Stack[0].tokenType == Term:
 				lrp.returnOnTerm()
 				continue
-			case lrp.l1Stack[0].tokenType == NTerm &&
-				lrp.l1Stack[0].numOfAlternative < lrp.l1Stack[0].countAlternative:
+			case lrp.l1Stack[0].tokenType == NTerm && lrp.l1Stack[0].numOfAlternative < lrp.l1Stack[0].countAlternative:
 				lrp.testAlternative()
 				continue
-			case lrp.l1Stack[0].tokenType == NTerm &&
-				lrp.l1Stack[0].numOfAlternative >= lrp.l1Stack[0].countAlternative:
+			case lrp.l1Stack[0].tokenType == NTerm && lrp.l1Stack[0].numOfAlternative >= lrp.l1Stack[0].countAlternative:
 				if lrp.l1Stack[0].token == lrp.grammar.StartSymbol && lrp.inIter == 0 {
 					return fmt.Errorf("The input string does not belong to the grammar ")
 				} else {
