@@ -1,4 +1,4 @@
-package main
+package lrparser
 
 func newTestGr() Grammar {
 	gr := Grammar{}

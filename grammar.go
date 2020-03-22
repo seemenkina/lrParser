@@ -1,4 +1,4 @@
-package main
+package lrparser
 
 import (
 	"fmt"
@@ -10,12 +10,6 @@ type Rule struct {
 	lSymbol string
 	rSymbol string
 }
-
-// Token type const
-const (
-	Term = iota
-	NTerm
-)
 
 // Non Terminal symbol
 type NToken struct {
