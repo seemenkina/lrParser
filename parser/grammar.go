@@ -16,7 +16,7 @@ type NToken struct {
 	n                string // symbol
 	alternative      []int  // alternative in rules
 	countAlternative int    // number of alternative in rules
-	firstN           int    // first alternative in rules
+	// firstN           int    // first alternative in rules
 }
 
 // Terminal symbol
@@ -62,7 +62,6 @@ func (gr *Grammar) AddNToken(ns string) error {
 		n:                ns,
 		alternative:      alt,
 		countAlternative: len(alt),
-		firstN:           alt[0],
 	}
 
 	gr.nTokens = append(gr.nTokens, nt)
@@ -94,12 +93,12 @@ func (gr *Grammar) PrintGrammar() {
 		}
 	}()
 
-	_, _ = fmt.Fprintf(w, "\n%s\t%s\t%s\t%s\t", "Symbol", "Count Alt", "First ALter", "Alternative")
-	_, _ = fmt.Fprintf(w, "\n%s\t%s\t%s\t%s\t", "------", "---------", "-----------", "-----------")
+	_, _ = fmt.Fprintf(w, "\n%s\t%s\t%s\t", "Symbol", "Count Alt", "Alternative")
+	_, _ = fmt.Fprintf(w, "\n%s\t%s\t%s\t", "------", "---------", "-----------")
 
 	for _, n := range gr.nTokens {
 		s := fmt.Sprintf("%d ", n.alternative)
-		_, _ = fmt.Fprintf(w, "\n%s\t%d\t%d\t%s\t", n.n, n.countAlternative, n.firstN, s)
+		_, _ = fmt.Fprintf(w, "\n%s\t%d\t%s\t", n.n, n.countAlternative, s)
 	}
 
 }

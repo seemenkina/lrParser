@@ -37,8 +37,6 @@ type LRParser struct {
 	l2Stack []L2Token
 	state   int
 	output  []int
-	l1Iter  int
-	l2Iter  int
 	inIter  int
 }
 
@@ -78,7 +76,7 @@ func (lrp *LRParser) PushL2Stack(l2t L2Token) {
 // A -> γ1
 // A1 - first alternative for A
 func (lrp *LRParser) growthOfTree() {
-	sym := lrp.l2Stack[lrp.l2Iter].token
+	sym := lrp.l2Stack[0].token
 	nTerm := lrp.grammar.nTokens[lrp.grammar.findNToken(sym)]
 	l1t := L1Token{
 		token:            nTerm.n,
@@ -139,7 +137,7 @@ func (lrp *LRParser) successfulCompletion() {
 func (lrp *LRParser) returnOnTerm() {
 	lrp.inIter--
 	l2t := L2Token{
-		token:     lrp.l1Stack[lrp.l1Iter].token,
+		token:     lrp.l1Stack[0].token,
 		tokenType: Term,
 	}
 	lrp.l1Stack = lrp.l1Stack[1:]
@@ -186,10 +184,7 @@ func (lrp *LRParser) returnNonTerm() {
 
 func (lrp *LRParser) printOutput() {
 	fmt.Printf("Left Out: ")
-	for _, o := range lrp.output {
-		fmt.Printf("%d ", o)
-	}
-	fmt.Println()
+	fmt.Println(fmt.Sprintf("%d ", lrp.output))
 }
 
 func (lrp *LRParser) StartParse() error {
@@ -197,16 +192,16 @@ func (lrp *LRParser) StartParse() error {
 		switch lrp.state {
 		case normal:
 			switch {
-			case lrp.l2Stack[lrp.l2Iter].tokenType == NTerm:
+			case lrp.l2Stack[0].tokenType == NTerm:
 				lrp.growthOfTree()
 				continue
 
-			case lrp.l2Stack[lrp.l2Iter].tokenType == Term &&
-				lrp.l2Stack[lrp.l2Iter].token != string(lrp.input[lrp.inIter]):
+			case lrp.l2Stack[0].tokenType == Term &&
+				lrp.l2Stack[0].token != string(lrp.input[lrp.inIter]):
 				lrp.state = ret
 				continue
 
-			case lrp.l2Stack[lrp.l2Iter].tokenType == Term && lrp.l2Stack[lrp.l2Iter].token == string(lrp.input[lrp.inIter]):
+			case lrp.l2Stack[0].tokenType == Term && lrp.l2Stack[0].token == string(lrp.input[lrp.inIter]):
 				lrp.successfulCompareInputCharacter()
 				if lrp.inIter == len(lrp.input) {
 					switch len(lrp.l2Stack) {
@@ -231,16 +226,16 @@ func (lrp *LRParser) StartParse() error {
 
 		case ret:
 			switch {
-			case lrp.l1Stack[lrp.l1Iter].tokenType == Term:
+			case lrp.l1Stack[0].tokenType == Term:
 				lrp.returnOnTerm()
 				continue
-			case lrp.l1Stack[lrp.l1Iter].tokenType == NTerm &&
-				lrp.l1Stack[lrp.l1Iter].numOfAlternative < lrp.l1Stack[lrp.l1Iter].countAlternative:
+			case lrp.l1Stack[0].tokenType == NTerm &&
+				lrp.l1Stack[0].numOfAlternative < lrp.l1Stack[0].countAlternative:
 				lrp.testAlternative()
 				continue
-			case lrp.l1Stack[lrp.l1Iter].tokenType == NTerm &&
-				lrp.l1Stack[lrp.l1Iter].numOfAlternative >= lrp.l1Stack[lrp.l1Iter].countAlternative:
-				if lrp.l1Stack[lrp.l1Iter].token == lrp.grammar.startSymbol && lrp.inIter == 0 {
+			case lrp.l1Stack[0].tokenType == NTerm &&
+				lrp.l1Stack[0].numOfAlternative >= lrp.l1Stack[0].countAlternative:
+				if lrp.l1Stack[0].token == lrp.grammar.startSymbol && lrp.inIter == 0 {
 					return fmt.Errorf("The input string does not belong to the grammar ")
 				} else {
 					lrp.returnNonTerm()
