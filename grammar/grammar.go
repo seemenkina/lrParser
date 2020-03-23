@@ -113,15 +113,6 @@ func (gr *Grammar) FindNToken(s string) int {
 	return -1
 }
 
-func (gr *Grammar) findTToken(s string) int {
-	for i, tt := range gr.tTokens {
-		if tt.t == s {
-			return i
-		}
-	}
-	return -1
-}
-
 func (gr *Grammar) IsNTerm(s string) int {
 	if gr.FindNToken(s) == -1 {
 		return parser.Term
