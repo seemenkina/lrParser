@@ -4,10 +4,15 @@ import (
 	"fmt"
 	"os"
 	"text/tabwriter"
-
-	"github.com/seemenkina/lrParser/parser"
 )
 
+// Token type const
+const (
+	Term = iota
+	NTerm
+)
+
+// Grammar's rules definition
 type Rule struct {
 	LSymbol string
 	RSymbol string
@@ -115,7 +120,7 @@ func (gr *Grammar) FindNToken(s string) int {
 
 func (gr *Grammar) IsNTerm(s string) int {
 	if gr.FindNToken(s) == -1 {
-		return parser.Term
+		return Term
 	}
-	return parser.NTerm
+	return NTerm
 }

@@ -14,12 +14,6 @@ type L1Token struct {
 	numOfAlternative int // current number of alternative in rules
 }
 
-// Token type const
-const (
-	Term = iota
-	NTerm
-)
-
 type L2Token struct {
 	token     string
 	tokenType int
@@ -50,7 +44,7 @@ func (lrp *LRParser) NewLRParser(gr grammar.Grammar, in string) {
 		if nt.N == lrp.grammar.StartSymbol {
 			lrp.l2Stack = append(lrp.l2Stack, L2Token{
 				token:     nt.N,
-				tokenType: NTerm,
+				tokenType: grammar.NTerm,
 			})
 		}
 	}
@@ -82,7 +76,7 @@ func (lrp *LRParser) growthOfTree() {
 	nTerm := lrp.grammar.NTokens[lrp.grammar.FindNToken(sym)]
 	l1t := L1Token{
 		token:            nTerm.N,
-		tokenType:        NTerm,
+		tokenType:        grammar.NTerm,
 		countAlternative: nTerm.CountAlternative,
 		numOfAlternative: 1,
 	}
@@ -107,7 +101,7 @@ func (lrp *LRParser) successfulCompareInputCharacter() {
 	lrp.inIter++
 	l1t := L1Token{
 		token:            lrp.l2Stack[0].token,
-		tokenType:        Term,
+		tokenType:        grammar.Term,
 		countAlternative: 0,
 		numOfAlternative: 1,
 	}
@@ -121,7 +115,7 @@ func (lrp *LRParser) successfulCompletion() {
 	lrp.state = end
 
 	for _, l1t := range lrp.l1Stack {
-		if l1t.tokenType == Term {
+		if l1t.tokenType == grammar.Term {
 			continue
 		}
 		it := lrp.grammar.FindNToken(l1t.token)
@@ -140,12 +134,14 @@ func (lrp *LRParser) returnOnTerm() {
 	lrp.inIter--
 	l2t := L2Token{
 		token:     lrp.l1Stack[0].token,
-		tokenType: Term,
+		tokenType: grammar.Term,
 	}
 	lrp.l1Stack = lrp.l1Stack[1:]
 	lrp.PushL2Stack(l2t)
 }
 
+// Test alternative for non-terminal symbol
+// (b, i, α Aj, γjβ ) |- (q, i, α Aj + 1, γ j + 1β )
 func (lrp *LRParser) testAlternative() {
 	lrp.state = normal
 
@@ -163,6 +159,8 @@ func (lrp *LRParser) testAlternative() {
 	})
 }
 
+// Return non terminal symbol: delete it from L1 stack, return to L2 stack
+// (b, i, α Aj, γjβ )  |- (b, i, α, Aβ )
 func (lrp *LRParser) returnNonTerm() {
 	it := lrp.grammar.FindNToken(lrp.l1Stack[0].token)
 	nr := lrp.grammar.NTokens[it].Alternative[lrp.l1Stack[0].numOfAlternative-1]
@@ -190,15 +188,15 @@ func (lrp *LRParser) StartParse() error {
 		switch lrp.state {
 		case normal:
 			switch {
-			case lrp.l2Stack[0].tokenType == NTerm:
+			case lrp.l2Stack[0].tokenType == grammar.NTerm:
 				lrp.growthOfTree()
 				continue
 
-			case lrp.l2Stack[0].tokenType == Term && lrp.l2Stack[0].token != string(lrp.input[lrp.inIter]):
+			case lrp.l2Stack[0].tokenType == grammar.Term && lrp.l2Stack[0].token != string(lrp.input[lrp.inIter]):
 				lrp.state = ret
 				continue
 
-			case lrp.l2Stack[0].tokenType == Term && lrp.l2Stack[0].token == string(lrp.input[lrp.inIter]):
+			case lrp.l2Stack[0].tokenType == grammar.Term && lrp.l2Stack[0].token == string(lrp.input[lrp.inIter]):
 				lrp.successfulCompareInputCharacter()
 				if lrp.inIter == len(lrp.input) {
 					switch len(lrp.l2Stack) {
@@ -223,13 +221,13 @@ func (lrp *LRParser) StartParse() error {
 
 		case ret:
 			switch {
-			case lrp.l1Stack[0].tokenType == Term:
+			case lrp.l1Stack[0].tokenType == grammar.Term:
 				lrp.returnOnTerm()
 				continue
-			case lrp.l1Stack[0].tokenType == NTerm && lrp.l1Stack[0].numOfAlternative < lrp.l1Stack[0].countAlternative:
+			case lrp.l1Stack[0].tokenType == grammar.NTerm && lrp.l1Stack[0].numOfAlternative < lrp.l1Stack[0].countAlternative:
 				lrp.testAlternative()
 				continue
-			case lrp.l1Stack[0].tokenType == NTerm && lrp.l1Stack[0].numOfAlternative >= lrp.l1Stack[0].countAlternative:
+			case lrp.l1Stack[0].tokenType == grammar.NTerm && lrp.l1Stack[0].numOfAlternative >= lrp.l1Stack[0].countAlternative:
 				if lrp.l1Stack[0].token == lrp.grammar.StartSymbol && lrp.inIter == 0 {
 					return fmt.Errorf("The input string does not belong to the grammar ")
 				} else {

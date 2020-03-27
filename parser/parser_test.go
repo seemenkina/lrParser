@@ -6,6 +6,7 @@ import (
 
 	"github.com/seemenkina/lrParser/grammar"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func createGr1() grammar.Grammar {
@@ -117,4 +118,26 @@ func TestLRParser_StartParse(t *testing.T) {
 			assert.EqualValues(t, flag, tt.answer)
 		}
 	})
+}
+
+func TestLRParser_PrintLRParserNOTOK(t *testing.T) {
+	gr := createGr2()
+	gr.PrintGrammar()
+	input := "!a-b!"
+	fmt.Printf("Input string: %s\n", input)
+	lrParser := LRParser{}
+	lrParser.NewLRParser(gr, input)
+	err := lrParser.StartParse()
+	fmt.Printf("Output: %s\n", err)
+}
+
+func TestLRParser_PrintLRParserOK(t *testing.T) {
+	gr := createGr2()
+	gr.PrintGrammar()
+	input := "!a+b!"
+	fmt.Printf("Input string: %s\n", input)
+	lrParser := LRParser{}
+	lrParser.NewLRParser(gr, input)
+	err := lrParser.StartParse()
+	require.NoError(t, err)
 }
